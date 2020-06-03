@@ -1,54 +1,66 @@
-{
+f{
     "$schema": "http://json-schema.org",
-    "$id": "http://yio-remote.com/plexmedia.json",
+    "$id": "http://yio-remote.com/netflixfiretv.json",
     "type": "object",
-    "title": "YIO Integration Plex Media Schema",
-    "description": "Required data points to set up a Plex Media integration.",
+    "title": "YIO Integration Netflix for Fire TV Schema",
+    "description": "Required data points to set up a Netflix for Fire TV integration.",
     "default": {},
     "additionalProperties": true,
     "examples": [
         {
-            "access_token": "",
-            "client_id": "",
-            "client_secret": "",
+            "adb_server_address": "",
+            "firetv_address_list": "",
+            "netflix_country_code": "",
+            "api_token": "",
             "entity_id" :""
         }
     ],
     "required": [
-        "access_token",
-        "client_id",
-        "client_secret",
+        "adb_server_address",
+        "firetv_address_list",
+        "netflix_country_code",
+        "api_token",
         "entity_id"
     ],
     "properties": {
         "access_token": {
-            "$id": "#/properties/access_token",
+            "$id": "#/properties/adb_server_adress",
             "type": "string",
-            "title": "The access_token schema",
-            "description": "Not user input. Access token generated after authenticating to Spotify.",
+            "title": "The adb_server_address schema",
+            "description": "IP adress of the remote ADB server.",
             "default": "",
             "examples": [
-                "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiVlx1MDAxNcKbwoNUwoonbFPCu8KhwrYiLCJpYXQiOjE0NDQyNjI1NDMsImV4cCI6MTQ0NDI2MjU2M30.MldruS1PvZaRZIJR4legQaauQ3_DYKxxP2rFnD37Ip4"
+                "192.168.1.1"
             ]
         },
         "client_id": {
-            "$id": "#/properties/client_id",
+            "$id": "#/properties/firetv_address_list",
             "type": "string",
-            "title": "The client_id schema",
-            "description": "Client ID from the Spotify Developer page.",
+            "title": "The firetv_address_list schema",
+            "description": "Comma separated list of Fire TV devices including port.",
             "default": "",
             "examples": [
-                "JKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiVlx1MDAxNcKbwoNUwoonbFPCu8KhwrYiLCJpYXQiO"
+                "192.168.1.2:5555,192.168.1.3:5555"
             ]
         },
         "client_secret": {
-            "$id": "#/properties/client_secret",
+            "$id": "#/properties/netflix_country_code",
             "type": "string",
-            "title": "The client_secret schema",
-            "description": "Client secret from the Spotify Developer page.",
+            "title": "The netflix_country_code schema",
+            "description": "Two letter country code to identify the country for Netflix listing. See GitHub for the full list.",
             "default": "",
             "examples": [
-                "JKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiVlx1MDAxNcKbwoNUwoonbFPCu8KhwrYiLCJpYXQiO"
+                "GB"
+            ]
+        },
+        "api_token": {
+            "$id": "#/properties/api_token",
+            "type": "string",
+            "title": "The api_token schema",
+            "description": "Rapid API api token for the Unofficial Netflix Online Global Search (uNoGS) API.",
+            "default": "",
+            "examples": [
+                "d265f197admsh69df230af976b65p19rt23jsn3d48f642215e"
             ]
         },
         "entity_id": {
@@ -58,7 +70,7 @@
             "description": "Not user input. A unique entity id.",
             "default": "",
             "examples": [
-                "plexmedia.plex",
+                "netflix.firetv",
                 "6550f44c-7f11-11ea-bc55-0242ac130003"
             ]
         }
