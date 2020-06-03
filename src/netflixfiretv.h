@@ -29,22 +29,23 @@
 #include "yio-interface/entities/mediaplayerinterface.h"
 #include "yio-model/mediaplayer/albummodel_mediaplayer.h"
 #include "yio-model/mediaplayer/searchmodel_mediaplayer.h"
+#include "yio-model/mediaplayer/speakermodel_mediaplayer.h"
 #include "yio-plugin/integration.h"
 #include "yio-plugin/plugin.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//// SPOTIFY FACTORY
+//// NETFLIXFIRETV FACTORY
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 const bool USE_WORKER_THREAD = false;
 
-class SpotifyPlugin : public Plugin {
+class NetflixFireTvPlugin : public Plugin {
     Q_OBJECT
     Q_INTERFACES(PluginInterface)
-    Q_PLUGIN_METADATA(IID "YIO.PluginInterface" FILE "spotify.json")
+    Q_PLUGIN_METADATA(IID "YIO.PluginInterface" FILE "netflixfiretv.json")
 
  public:
-    SpotifyPlugin();
+     NetflixFireTvPlugin();
 
     // Plugin interface
  protected:
@@ -54,14 +55,14 @@ class SpotifyPlugin : public Plugin {
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//// SPOTIFY CLASS
+//// NETFLIXFIRETV CLASS
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-class Spotify : public Integration {
+class  NetflixFireTv : public Integration {
     Q_OBJECT
 
  public:
-    explicit Spotify(const QVariantMap& config, EntitiesInterface* entities, NotificationsInterface* notifications,
+    explicit  NetflixFireTv(const QVariantMap& config, EntitiesInterface* entities, NotificationsInterface* notifications,
                      YioAPIInterface* api, ConfigInterface* configObj, Plugin* plugin);
 
     void sendCommand(const QString& type, const QString& entitId, int command, const QVariant& param) override;
@@ -74,52 +75,65 @@ class Spotify : public Integration {
 
  signals:
     void requestReady(const QVariantMap& obj, const QString& url);
+    void headersReady(const QString& id, const QString& title, const QString& subtitle, const QString& imgUrl);
 
  private:
-    // Spotify API calls
+    //  NetflixFireTv API calls
     void search(QString query);
     void search(QString query, QString type);
-    void search(QString query, QString type, QString limit, QString offset);
     void getAlbum(QString id);
     void getPlaylist(QString id);
     void getUserPlaylists();
 
-    // Spotify API authentication
-    void refreshAccessToken();
-
-    // Spotify Connect API calls
+    //  NetflixFireTv status adb calls
+    bool adbConnect(const QString& ip);
     void getCurrentPlayer();
+    static QString sendAdbCommand(const QString& message);
+    //QByteArray sendAdbCommand_old(const QString& message);
+    void parseRecent(); // parse recently viewed content
+    static bool netflixActive();
+    static bool openNetflix(); // get focus for Nettflix
 
     void updateEntity(const QString& entity_id, const QVariantMap& attr);
 
     // get and post requests
-    void getRequest(const QString& url, const QString& params);
-    void postRequest(const QString& url, const QString& params);
-    void putRequest(const QString& url, const QString& params);  // TODO(marton): change param to QUrlQuery
+    void getRequest(const QString& url, const QString& params);  // TODO(marton): change param to QUrlQuery
                                                                  // QUrlQuery query;
 
-    //    query.addQueryItem("username", "test");
-    //    query.addQueryItem("password", "test");
+    // speaker/source selection
+    void changeDevice(QString id);  //change the speaker/source
+    void getDevices();
 
-    //    url.setQuery(query.query());
+    // general functions
+    QString convertSE(int series, int episode);
+    QString getCountryId(const QString& countryCode);
+    QString getHead(const QString& theWebPAge);
 
  private slots:  // NOLINT open issue: https://github.com/cpplint/cpplint/pull/99
-    void onTokenTimeOut();
     void onPollingTimerTimeout();
+    void getDirect(QNetworkReply * reply);
 
  private:
-    bool    m_startup = true;
     QString m_entityId;
 
     // polling timer
     QTimer* m_pollingTimer;
 
-    // Spotify auth stuff
-    QString m_clientId;
-    QString m_clientSecret;
-    QString m_accessToken;
-    QString m_refreshToken;
-    int     m_tokenExpire;  // in seconds
-    QTimer* m_tokenTimeOutTimer;
-    QString m_apiURL = "https://api.spotify.com";
+    // ADB details
+    QString m_serverAddress;
+    QString m_firetvAddress = "";
+    QStringList m_firetvDevices; // all devices
+    bool m_adbConnect = false; // are we connected to the fire tv.
+    bool m_newShow = true; // update only when the show changes.
+
+    //Fire TV status
+    int m_firetvVol = 100; //track volume, default to max
+
+    // Netflix unoffical API auth
+    QString m_apiUrl = "unogsng.p.rapidapi.com";
+    QString m_apiUrl2 = "unogs-unogs-v1.p.rapidapi.com";
+    QString m_apiToken;
+    QString m_apiCountry;
+
+    QVector<QStringList> countryTable{{"AU","BR","CA","FR","DE","GR","HK","IS","IN","IT","JP","NL","SK","KR","ES","SE","GB","US"},{"23","29","33","45","39","327","331","265","337","269","267","67","412","348","270","73","46","78"}};
 };

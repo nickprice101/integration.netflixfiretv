@@ -6,8 +6,8 @@ QT       += core quick network
 GIT_HASH = "$$system(git log -1 --format="%H")"
 GIT_BRANCH = "$$system(git rev-parse --abbrev-ref HEAD)"
 GIT_VERSION = "$$system(git describe --match "v[0-9]*" --tags HEAD --always)"
-SPOTIFY_VERSION = $$replace(GIT_VERSION, v, "")
-DEFINES += PLUGIN_VERSION=\\\"$$SPOTIFY_VERSION\\\"
+NETFLIXFIRETV_VERSION = $$replace(GIT_VERSION, v, "")
+DEFINES += PLUGIN_VERSION=\\\"$$NETFLIXFIRETV_VERSION\\\"
 
 # build timestamp
 win32 {
@@ -54,12 +54,14 @@ unix {
     }
 }
 
-QMAKE_SUBSTITUTES += spotify.json.in version.txt.in
+QMAKE_SUBSTITUTES += netflixfiretv.json.in version.txt.in
 # output path must be included for the output file from QMAKE_SUBSTITUTES
 INCLUDEPATH += $$OUT_PWD
-HEADERS  += src/spotify.h
-SOURCES  += src/spotify.cpp
-TARGET    = spotify
+HEADERS  += src/netflixfiretv.h \
+    src/adbclient.h
+SOURCES  += src/netflixfiretv.cpp \
+    src/adbclient.cpp
+TARGET    = netflixfiretv
 
 # Configure destination path. DESTDIR is set in qmake-destination-path.pri
 DESTDIR = $$DESTDIR/plugins
@@ -70,7 +72,7 @@ UI_DIR = $$PWD/build/$$DESTINATION_PATH/ui
 
 DISTFILES += \
     dependencies.cfg \
-    spotify.json.in \
+    netflixfiretv.json.in \
     version.txt.in \
     README.md
 
