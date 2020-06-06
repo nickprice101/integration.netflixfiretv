@@ -73,6 +73,7 @@ UI_DIR = $$PWD/build/$$DESTINATION_PATH/ui
 DISTFILES += \
     dependencies.cfg \
     netflixfiretv.json.in \
+    setup_schema.json \
     version.txt.in \
     README.md
 
