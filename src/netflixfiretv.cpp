@@ -172,8 +172,8 @@ void NetflixFireTv::search(QString query, QString type) {
                 QVariantList results = map.value("results").toList();
                 for (int i = 0; i < results.length(); i++) {
                     id = results[i].toMap().value("nfid").toString();
-                    title = results[i].toMap().value("title").toString() + "(" + results[i].toMap().value("year").toString() + ")";
-                    subtitle = results[i].toMap().value("synopsis").toString();
+                    title = results[i].toMap().value("title").toString().replace("&#39;","'") + "(" + results[i].toMap().value("year").toString() + ")";
+                    subtitle = results[i].toMap().value("synopsis").toString().left(50).replace("&#39;","'");
 
                     if (results[i].toMap().value("vtype").toString() == "series") { itemType = "show";
                     } else if (results[i].toMap().value("vtype").toString() == "movie") { itemType = "movie"; }
@@ -251,8 +251,8 @@ void NetflixFireTv::getAlbum(QString id) {
                 QVariantList episodes = seasons[i].toMap().value("episodes").toList();
                 for (int j = 0; j < episodes.length(); j++) { // loop through the current season
                      album->addItem(episodes[j].toMap().value("epid").toString(),
-                                  convertSE(episodes[j].toMap().value("seasnum").toInt(),episodes[j].toMap().value("epnum").toInt()) + episodes[j].toMap().value("title").toString(),
-                                  episodes[j].toMap().value("synopsis").toString(),
+                                  convertSE(episodes[j].toMap().value("seasnum").toInt(),episodes[j].toMap().value("epnum").toInt()) + episodes[j].toMap().value("title").toString().replace("&#39;","'"),
+                                  episodes[j].toMap().value("synopsis").toString().left(50).replace("&#39;","'"),
                                   type,
                                   episodes[j].toMap().value("img").toString(),
                                   commands);
@@ -343,7 +343,7 @@ void NetflixFireTv::getPlaylist(QString id) {
                 QString title = listTitle;
                 QString subtitle = listSubtitle;
                 QString type = "episode";
-                QString image = listImage; //use image for the first show
+                QString image = listImage; //use image for the first show?
                 QStringList commands = {"PLAY"};
                 BrowseModel*  album = new BrowseModel(nullptr,
                                                       shows[0].toMap().value("epid").toString(),
@@ -351,12 +351,12 @@ void NetflixFireTv::getPlaylist(QString id) {
                                                       subtitle,
                                                       type,
                                                       image,
-                                                      commands);
+                                                      {""});
 
                 for (int i = 0; i < shows.length(); i++) { // loop through the current shows
                     album->addItem(shows[i].toMap().value("nfpid").toString(),
-                                   shows[i].toMap().value("title").toString() + " (" + shows[i].toMap().value("year").toString() + ")",
-                                   shows[i].toMap().value("synopsis").toString(),
+                                   shows[i].toMap().value("title").toString().replace("&#39;","'") + " (" + shows[i].toMap().value("year").toString() + ")",
+                                   shows[i].toMap().value("synopsis").toString().left(50).replace("&#39;","'"),
                                    type,
                                    shows[i].toMap().value("img").toString(),
                                    commands);
@@ -375,7 +375,8 @@ void NetflixFireTv::getPlaylist(QString id) {
                 QString title = listTitle;
                 QString subtitle = listSubtitle;
                 QString type = "episode";
-                QString image = shows[0].toStringList().at(2); //use image for the first show
+                QString image = listImage;
+                //QString image = shows[0].toStringList().at(2); //use image for the first show
                 QStringList commands = {"PLAY"};
                 BrowseModel*  album = new BrowseModel(nullptr,
                                                       "/title/" + shows[0].toStringList().at(0),
@@ -383,11 +384,13 @@ void NetflixFireTv::getPlaylist(QString id) {
                                                       subtitle,
                                                       type,
                                                       image,
-                                                      commands);
+                                                      {""});
                 for (int i = 0; i < shows.length(); i++) { // loop through the current shows
+                    title = shows[i].toStringList().at(1);
+                    subtitle = shows[i].toStringList().at(3);
                     album->addItem("/title/" + shows[i].toStringList().at(0),
-                                   shows[i].toStringList().at(1) + " (" + shows[i].toStringList().at(7) + ")",
-                                   shows[i].toStringList().at(3),
+                                   title.replace("&#39;","'") + " (" + shows[i].toStringList().at(7) + ")",
+                                   subtitle.left(50).replace("&#39;","'"),
                                    type,
                                    shows[i].toStringList().at(2),
                                    commands);
@@ -420,14 +423,14 @@ void NetflixFireTv::getUserPlaylists() {
     //album->setObjectName("userplaylists");
 
     album->addItem("adb_recent","Recently Viewed","Recently viewed shows",type,"qrc:/images/netflix_recent.png",commands);
-    album->addItem("cgi_release","New Releases","New Releases in your country",type,image,commands);
-    album->addItem("cgi_season","New Seasons","New Releases in your country",type,image,commands);
-    album->addItem("cgi_last","Last Chance","Last chance to view these shows",type,image,commands);
-    album->addItem("sch_comedy","Recent Comedy","Recent comedy releases",type,image,commands);
-    album->addItem("sch_standup","Recent Stand-up","Recent stand-up releases", type,image,commands);
-    album->addItem("sch_drama","Recent Drama","Recent drama releases",type,image,commands);
-    album->addItem("sch_action","Recent Thriller","Recent thriller releases",type,image,commands);
-    album->addItem("sch_movies","Recent Movies","Recent movie releases",type,image,commands);
+    album->addItem("cgi_release","New Releases","New Releases in your country",type,"qrc:/images/netflix_releases.png",commands);
+    album->addItem("cgi_season","New Seasons","New Releases in your country",type,"qrc:/images/netflix_seasons.png",commands);
+    album->addItem("cgi_last","Last Chance","Last chance to view these shows",type,"qrc:/images/netflix_lastchance.png",commands);
+    album->addItem("sch_comedy","Recent Comedy","Recent comedy releases",type,"qrc:/images/netflix_comedy.png",commands);
+    album->addItem("sch_standup","Recent Stand-up","Recent stand-up releases", type,"qrc:/images/netflix_standup.png",commands);
+    album->addItem("sch_drama","Recent Drama","Recent drama releases",type,"qrc:/images/netflix_drama.png",commands);
+    album->addItem("sch_action","Recent Thriller","Recent thriller releases",type,"qrc:/images/netflix_thriller.png",commands);
+    album->addItem("sch_movies","Recent Movies","Recent movie releases",type,"qrc:/images/netflix_movies.png",commands);
 
     // update the entity
     EntityInterface* entity = static_cast<EntityInterface*>(m_entities->getEntityInterface(m_entityId));
