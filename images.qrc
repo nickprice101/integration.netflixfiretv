@@ -1,0 +1,14 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/netflix_recent.png</file>
+        <file>images/netflix_comedy.png</file>
+        <file>images/netflix_drama.png</file>
+        <file>images/netflix_lastchance.png</file>
+        <file>images/netflix_movies.png</file>
+        <file>images/netflix_releases.png</file>
+        <file>images/netflix_seasons.png</file>
+        <file>images/netflix_standup.png</file>
+        <file>images/netflix_thriller.png</file>
+        <file>images/netflix_action.png</file>
+    </qresource>
+</RCC>

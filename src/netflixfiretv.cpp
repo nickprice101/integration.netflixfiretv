@@ -20,27 +20,6 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  *****************************************************************************/
 
-//  API only has support for the following countries:
-//  List of supported Countries
-//| Australia | AU 23
-//| Brazil | BR 29
-//| Canada | CA 33
-//| France | FR 45
-//| Germany | DE 39
-//| Greece | GR 327
-//| Hong Kong | HK 331
-//| Iceland | IS 265
-//| India | IN 337
-//| Italy | IT 269
-//| Japan | JP 267
-//| Netherlands | NL 67
-//| Slovakia | SK 412
-//| South Korea | KR 348
-//| Spain | ES 270
-//| Sweden | SE 73
-//| United Kingdom | GB 46
-//| United States | US 78
-
 #include "netflixfiretv.h"
 
 #include <QJsonArray>
@@ -298,41 +277,60 @@ void NetflixFireTv::getPlaylist(QString id) {
     QString genres;
     QString listTitle = "";
     QString listSubtitle = "";
+    QString listImage = "";
 
     if (id == "adb_recent") {
-        parseRecent();
+        BrowseModel* recentModel = new BrowseModel(nullptr, "adb_recent", "Recently Viewed", "", "show", "qrc:/images/netflix_recent.png", {"PLAY"});
+        QString result = sendAdbCommand("pm dump com.netflix.ninja | grep netflix://title/");
+        m_recentShows = result.split("\n");
+        m_recentShows.removeDuplicates();
+        parseRecent(recentModel);
         return;
     } else if (id == "sch_comedy") {
         genres = "1009,1402,2700,3903,4426,4906";
         listTitle = "Latest Comedy";
+        listSubtitle = "Latest comedy releases";
+        listImage = "qrc:/images/netflix_comedy.png";
     } else if (id == "sch_standup") {
         genres = "10778";
+        listTitle = "Latest Stand-up";
+        listSubtitle = "Latest stand-up releases";
+        listImage = "qrc:/images/netflix_standup.png";
     } else if (id == "sch_drama") {
         genres = "5763,2748,3179,3682,3916,3947";
+        listTitle = "Latest Drama";
+        listSubtitle = "Latest drama releases";
+        listImage = "qrc:/images/netflix_drama.png";
     } else if (id == "sch_action") {
         genres = "899,1568,1492,1694,3327,3916";
+        listTitle = "Latest Action";
+        listSubtitle = "Latest action releases";
+        listImage = "qrc:/images/netflix_action.png";
     }
-     message = "?country_andorunique=and&countrylist=" + getCountryId(m_apiCountry) + "&genrelist=" + genres + "&type=series&orderby=date&limit=30";
-
-    // DRAMA: 5763 = Dramas, 2748 = Courtroom Dramas, 3179 = Biographical Drams, 3682 = British Dramas, 3916 = Sci-Fi Dramas, 3947 = Social Issue Dramas
-    // ACTION: 899 = Critically-acclaimed Action & Adventure, 1568 = Action Sci-Fi & Fantasy, 1492 = Sci-Fi & Fantasy, 1694 = Sci-Fi Horror Films, 3327 = Alien Sci-Fi, 3916 = Sci-Fi Dramas
-    // THRILLERS: 5505 = Psychological Thrillers, 972 = Steamy Thrillers, 6839 = Documentaries, 1774 = British Thrillers, 3269 = Independent Thrillers
-    // COMEDY: 1009 = British Comedies, 1402 = Late Night Comedies, 2700 = Political Comedies, 3903 = Sitcoms, 4426 = Foreign Comedies, 4906 = African-American Comedies
-    // STAND-UP: 10778 = African-American Stand-up Comedy
-    // HORROR: 1694 = Sci-Fi Horror Films, 4809 = Psychological Horro Films
-    // DOCUMENTARIES: 2595 = Science & Nature Docs, 3652 = Biographical Documentaries, 3675 = Social & Cultural Docs, 4649 = Rockumentaries
-    // ANIMATION: 2653 = Action Anime, 2729 = Anime Sci-Fi, 4698 = Animation
+    message = "?country_andorunique=and&countrylist=" + getCountryId(m_apiCountry) + "&genrelist=" + genres + "&type=series&orderby=date&limit=30";
 
     if (id == "cgi_release") {
         url = "https://" + m_apiUrl2 + "/api.cgi";
+        listTitle = "Latest Releases";
+        listSubtitle = "Latest releases";
+        listImage = "qrc:/images/netflix_releases.png";
         message = "?q=get:new14:" + m_apiCountry + "&p=1&t=ns&st=adv"; // new7 = last 7 days, p = page (per 100)
     } else if (id == "cgi_season") {
         url = "https://" + m_apiUrl2 + "/api.cgi";
+        listTitle = "New Seasons";
+        listSubtitle = "Latest new seasons added";
+        listImage = "qrc:/images/netflix_seasons.png";
         message = "?q=get:seasons14:" + m_apiCountry + "&p=1&t=ns&st=adv";
     } else if (id == "cgi_last") {
         url = "https://" + m_apiUrl2 + "/api.cgi";
+        listTitle = "Last Chance";
+        listSubtitle = "Last chance to watch";
+        listImage = "qrc:/images/netflix_lastchance.png";
         message = "?q=get:exp:" + m_apiCountry + "&p=1&t=ns&st=adv";
     } else if (id == "sch_movies") {
+        listTitle = "Latest Movies";
+        listSubtitle = "Latest movies";
+        listImage = "qrc:/images/netflix_movies.png";
         message = "?country_andorunique=and&countrylist=" + getCountryId(m_apiCountry) + "&type=movie&orderby=date&limit=30";
     }
 
@@ -345,7 +343,7 @@ void NetflixFireTv::getPlaylist(QString id) {
                 QString title = listTitle;
                 QString subtitle = listSubtitle;
                 QString type = "episode";
-                QString image = shows[0].toMap().value("img").toString(); //use image for the first show
+                QString image = listImage; //use image for the first show
                 QStringList commands = {"PLAY"};
                 BrowseModel*  album = new BrowseModel(nullptr,
                                                       shows[0].toMap().value("epid").toString(),
@@ -421,7 +419,7 @@ void NetflixFireTv::getUserPlaylists() {
     BrowseModel* album = new BrowseModel(nullptr, id, title, subtitle, type, image, commands);
     //album->setObjectName("userplaylists");
 
-    album->addItem("adb_recent","Recently Viewed","Recently viewed shows",type,image,commands);
+    album->addItem("adb_recent","Recently Viewed","Recently viewed shows",type,"qrc:/images/netflix_recent.png",commands);
     album->addItem("cgi_release","New Releases","New Releases in your country",type,image,commands);
     album->addItem("cgi_season","New Seasons","New Releases in your country",type,image,commands);
     album->addItem("cgi_last","Last Chance","Last chance to view these shows",type,image,commands);
@@ -445,10 +443,13 @@ void NetflixFireTv::getCurrentPlayer() {
     EntityInterface* entity = static_cast<EntityInterface*>(m_entities->getEntityInterface(m_entityId));
     if (entity && netflixActive()) { // only update if netflix is the active player
         // MAKE ADB CALL AND CHECK PLAYER STATUS
+        QString result = sendAdbCommand("adb shell dumpsys window windows | grep -E 'mCurrentFocus|mFocusedApp'");
+
 
 
         // reduce the burden if track/show/movie hasn't changed.
         if (m_newShow) {
+
             // get the image. work backwards depending on the metadata available.
             QString image = "";
             entity->updateAttrByIndex(MediaPlayerDef::MEDIAIMAGE, image);
@@ -507,14 +508,16 @@ void NetflixFireTv::sendCommand(const QString& type, const QString& entityId, in
             sendAdbCommand("input key event 126");  // normal play without browsing
         } else {
             if (param.toMap().contains("type")) {
-                QString message = "am start -a android.intent.action.VIEW -d" + param.toMap().value("id").toString();
-                sendAdbCommand(message);
+                //QString message = "am start -a android.intent.action.VIEW -d http://www.netflix.com/" + param.toMap().value("id").toString();
+                //QString message = "am start -n com.netflix.ninja/.ui.launch.UIWebViewActivity -a android.intent.action.ACTION_VIEW -d http://www.netflix.com/" + param.toMap().value("id").toString(); // use watch/id to play the item.
+                QString message = "am start -a android.intent.action.ACTION_VIEW -d http://www.netflix.com/" + param.toMap().value("id").toString(); // use watch/id to play the item.
+                QString result = sendAdbCommand(message); //parse result for user feedback?
             }
         }
     } else if (command == MediaPlayerDef::C_PAUSE) {
         sendAdbCommand("input key event 127");
     } else if (command == MediaPlayerDef::C_NEXT) {
-        sendAdbCommand("input key event 87"); // make next ask a scrub?
+        sendAdbCommand("input key event 87"); // make next do a scrub?
         m_newShow = true; // this would be picked up by the polling but better to pre-empt it and speed everything up a bit.
     } else if (command == MediaPlayerDef::C_PREVIOUS) {
         sendAdbCommand("input key event 88");
@@ -536,7 +539,18 @@ void NetflixFireTv::sendCommand(const QString& type, const QString& entityId, in
         changeDevice(param.toString());
     } else if (command == MediaPlayerDef::C_GET_SPEAKERS) {
         getDevices();
+    } else if (command == MediaPlayerDef::C_CURSOR_UP) {
+        sendAdbCommand("input key event 19");
+    } else if (command == MediaPlayerDef::C_CURSOR_DOWN) {
+        sendAdbCommand("input key event 20");
+    } else if (command == MediaPlayerDef::C_CURSOR_LEFT) {
+        sendAdbCommand("input key event 21");
+    } else if (command == MediaPlayerDef::C_CURSOR_RIGHT) {
+        sendAdbCommand("input key event 22");
+    } else if (command == MediaPlayerDef::C_CURSOR_OK) {
+        sendAdbCommand("input key event 23");
     }
+
 }
 
 void NetflixFireTv::changeDevice(QString id) {
@@ -573,7 +587,6 @@ void NetflixFireTv::getDevices() {
     if (entity) {
         qCDebug(m_logCategory) << "Entity pointer: " << entity;
         MediaPlayerInterface* me = static_cast<MediaPlayerInterface*>(entity->getSpecificInterface());
-
         me->setSpeakerModel(devices);
     }
 }
@@ -658,15 +671,30 @@ void NetflixFireTv::getRequest(const QString& url, const QString& params) {
     manager->get(request);
 }
 
-void NetflixFireTv::parseRecent() {
+void NetflixFireTv::parseRecent(BrowseModel* recentModel) {
     qCDebug(m_logCategory) << "PARSE RECENTLY VIEWED";
 
-    BrowseModel* recentModel = new BrowseModel(nullptr, "adb_recent", "Recently Viewed", "", "show", "", {"PLAY"});
-
     QObject* context = new QObject(this);
-    QObject::connect(this, &NetflixFireTv::headersReady, context, [=](const QString& id, const QString& title, const QString& subtitle, const QString& imgUrl) {
-        qCDebug(m_logCategory) << "HEADER RESPONSE RECEIVED...";
-        recentModel->addItem(id,title,subtitle,"show",imgUrl,{"PLAY"});
+    QObject::connect(this, &NetflixFireTv::headersReady, context, [=](const QVariantMap& map) {
+        //qCDebug(m_logCategory) << "HEADER RESPONSE RECEIVED...";
+        if (recentModel->imageUrl().isEmpty()) {
+            recentModel->imageUrl() = map.value("image").toString(); // doesn't work.
+            recentModel->imageUrlChanged();
+            qCDebug(m_logCategory) << "JSON show name: " << map.value("name").toString();
+            //qCDebug(m_logCategory) << "JSON Image URL: " << map.value("image").toString();
+            //qCDebug(m_logCategory) << "Model Image URL: " << recentModel->imageUrl();
+        }
+
+        if (map.value("type").toString() == "TVSeries") { // VideoObject is for an episdoe but this is a nested item of the show.
+            QString type = "show";
+        } else {
+            QString type = "movie";
+        }
+        QString id = map.value("url").toString();
+        id = id.right(id.length() - id.indexOf("title/"));
+        QStringList commands = {"PLAY"};
+
+        recentModel->addItem(id,map.value("name").toString(),map.value("description").toString(),"show",map.value("image").toString(),commands);
 
         // update the entity
         EntityInterface* entity = static_cast<EntityInterface*>(m_entities->getEntityInterface(m_entityId));
@@ -676,71 +704,89 @@ void NetflixFireTv::parseRecent() {
         }
 
         context->deleteLater();
+        if (m_recentShows.count() > 1) {
+            m_recentShows.removeLast();
+            parseRecent(recentModel); // go again.
+
+        } else {
+            m_recentShows = QStringList(); // clear the list
+        }
     });
 
-    QString result = sendAdbCommand("pm dump com.netflix.ninja | grep netflix://title/");
-    //qCDebug(m_logCategory) << "Adb response: " << result;
+    if (m_recentShows.count() > 0 && m_recentShows[0].contains("netflix://title/")) { // only iterate if there is something in the list.
+        //qCDebug(m_logCategory) << "m_recentShows.last() " << m_recentShows.last();
+        QString message = m_recentShows.last(); // items should be displayed in reverse order.
+        int start = message.indexOf("netflix://title/");
+        if (start != -1) {
+            int end = message.indexOf(" flg");
+            start += 10;
+            QStringRef id = message.midRef(start, end-start);
+            //qCDebug(m_logCategory) << "Start: " << start << ", End: " << end << ", id: " << id;
+            if (id == "title/-1") {
+                m_recentShows.removeLast(); // invalid entry, remove it
+                parseRecent(recentModel); // call the loop again.
+                return;
+            } else {
+                qCDebug(m_logCategory) << "Calling: " << "https://netflix.com/nl-en/" + id;
+                QUrl url("https://www.netflix.com/nl-en/" + id);
+                QNetworkRequest request;
+                //request.setSslConfiguration(QSslConfiguration::defaultConfiguration());
+                request.setUrl(url);
 
-    int start = 0;
-    int end = 0;
-    //while ((start = result.indexOf("netflix://title/", start)) != -1 ) {
-    QString id = "nl-en/title/80239866";
-        end = result.indexOf(" flg", end);
-        start += 10;
-        //QStringRef id = result.midRef(start, end-start);
-        end += 4;
-        if (id != "title/-1") {
-            qCDebug(m_logCategory) << "Calling: " << "https://netflix.com/" + id;
-            QUrl url("https://www.netflix.com/nl-en" + id);
-            QNetworkRequest request;
-            request.setSslConfiguration(QSslConfiguration::defaultConfiguration());
-            request.setUrl(QUrl::fromUserInput("https://www.netflix.com/nl-en/title/80239866"));
-
-            QNetworkAccessManager * manager = new QNetworkAccessManager(this);
-            QObject::connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(getDirect(QNetworkReply*)));
-            manager->get(request);
+                QNetworkAccessManager * manager = new QNetworkAccessManager(this);
+                QObject::connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(getDirect(QNetworkReply*)));
+                manager->get(request);
+            }
         }
-    //}
+    }
+
 }
 
-QString NetflixFireTv::getHead(const QString& theWebPage) {
+
+// START #### PARSE NETFLIX WEBPAGE FOR METADATA
+QString NetflixFireTv::getHead(const QString& theWebPage) { // extracts the JSON portion of the Netflix header.
     //QRegExp filter("<script type(.+)" + QRegExp::escape("}</script>"));
     QRegExp filter(QRegExp::escape("<script type=\"application/ld+json\">{") + "(.+)" + QRegExp::escape("}</script>"));
     int result = filter.indexIn(theWebPage);
-    qCDebug(m_logCategory) << "Filter result: " << filter;
-    qCDebug(m_logCategory) << "Filter result: " << result;
-    qCDebug(m_logCategory) << "Filter result: " << filter.cap(1);
-    if(result != -1) { return filter.cap(1);
+    if(result != -1) {
+        QString output = "{" + filter.cap(1) + "}";
+        return output.remove("@").simplified();
     } else { return QString(); }
 }
 
 
 void NetflixFireTv::getDirect(QNetworkReply * reply) {
-    qCDebug(m_logCategory) << "GET DIRECT CALLED...";
-    //if (reply->operation() == QNetworkAccessManager::HeadOperation){
     QUrl redirect = reply->attribute(QNetworkRequest::RedirectionTargetAttribute).toUrl();
-    qCDebug(m_logCategory) << "Redirect url: " << reply->url().resolved(redirect);
+    //qCDebug(m_logCategory) << "Redirect url: " << reply->url().resolved(redirect);
 
-        //qCDebug(m_logCategory) << "Raw header pairs: " << reply->rawHeaderPairs();
-        QString answer = reply->readAll();
-        qCDebug(m_logCategory) << "Full reply: " << getHead(answer);
-        //qCDebug(m_logCategory) << "Errors: " << QSslSocket::supportsSsl();
+    //qCDebug(m_logCategory) << "Raw header pairs: " << reply->rawHeaderPairs();
+    //qCDebug(m_logCategory) << "Supports SSL: " << QSslSocket::supportsSsl();
+    QString answer = reply->readAll();
 
-        if (answer != "") {
-            QString id = "test";
-            QString title = "test";
-            QString subtitle ="little test";
-            QString imgUrl = "";
-            emit headersReady(id, title, subtitle, imgUrl);
+    if (answer != "") {
+        answer = getHead(answer);
+        //qCDebug(m_logCategory).noquote() << "Full reply: " << answer;
+
+        QMap<QString, QVariant> map;
+        // convert to json
+        QJsonParseError parseerror;
+        QJsonDocument doc = QJsonDocument::fromJson(answer.toUtf8(), &parseerror);
+        if (parseerror.error != QJsonParseError::NoError) {
+            qCWarning(m_logCategory) << "JSON error: " << parseerror.errorString();
+            //qCWarning(m_logCategory) << "Location: " << parseerror.offset;
+            return;
         }
-
-        reply->deleteLater();
-    //}
+        // create a map object
+        map = doc.toVariant().toMap();
+        emit headersReady(map);
+    }
+    reply->deleteLater();
 }
+// END #### PARSE NETFLIX WEBPAGE FOR METADATA
 
 void NetflixFireTv::onPollingTimerTimeout() { getCurrentPlayer(); }
 
-QString NetflixFireTv::convertSE(int series, int episode) {
+QString NetflixFireTv::convertSE(int series, int episode) { // convert seasons, episode to S00E00 format. Will remove once proper hierarchical browsing is supported.
     QString output = "S";
     if (series < 10) { output += "0" + QString::number(series);
     } else { output += QString::number(series); }
@@ -753,8 +799,8 @@ QString NetflixFireTv::convertSE(int series, int episode) {
 }
 
 QString NetflixFireTv::getCountryId(const QString& countryCode) {
-    for (int i = 0; i < countryTable[0].length(); i++) {
-        if (countryTable[0][i] == countryCode) { return countryTable[1][i]; }
+    for (int i = 0; i < m_countryTable[0].length(); i++) {
+        if (m_countryTable[0][i] == countryCode) { return m_countryTable[1][i]; }
     }
     qCWarning(m_logCategory) << "Error country code not found: " << countryCode;
     return "78"; // set to US if nothing is found.

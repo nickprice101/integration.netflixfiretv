@@ -75,7 +75,7 @@ class  NetflixFireTv : public Integration {
 
  signals:
     void requestReady(const QVariantMap& obj, const QString& url);
-    void headersReady(const QString& id, const QString& title, const QString& subtitle, const QString& imgUrl);
+    void headersReady(const QVariantMap& obj); //const QString& id, const QString& title, const QString& subtitle, const QString& imgUrl);
 
  private:
     //  NetflixFireTv API calls
@@ -90,7 +90,7 @@ class  NetflixFireTv : public Integration {
     void getCurrentPlayer();
     static QString sendAdbCommand(const QString& message);
     //QByteArray sendAdbCommand_old(const QString& message);
-    void parseRecent(); // parse recently viewed content
+    void parseRecent(BrowseModel* recentModel); // parse recently viewed content. Pass the model through as we iterate.
     static bool netflixActive();
     static bool openNetflix(); // get focus for Nettflix
 
@@ -119,12 +119,16 @@ class  NetflixFireTv : public Integration {
     // polling timer
     QTimer* m_pollingTimer;
 
+    // Really bad
+    QString m_recentMessage = "";
+
     // ADB details
     QString m_serverAddress;
     QString m_firetvAddress = "";
     QStringList m_firetvDevices; // all devices
     bool m_adbConnect = false; // are we connected to the fire tv.
     bool m_newShow = true; // update only when the show changes.
+    QString m_currentShow; // currently playing show
 
     //Fire TV status
     int m_firetvVol = 100; //track volume, default to max
@@ -135,5 +139,6 @@ class  NetflixFireTv : public Integration {
     QString m_apiToken;
     QString m_apiCountry;
 
-    QVector<QStringList> countryTable{{"AU","BR","CA","FR","DE","GR","HK","IS","IN","IT","JP","NL","SK","KR","ES","SE","GB","US"},{"23","29","33","45","39","327","331","265","337","269","267","67","412","348","270","73","46","78"}};
+    QVector<QStringList> m_countryTable{{"AU","BR","CA","FR","DE","GR","HK","IS","IN","IT","JP","NL","SK","KR","ES","SE","GB","US"},{"23","29","33","45","39","327","331","265","337","269","267","67","412","348","270","73","46","78"}};
+    QStringList m_recentShows;
 };

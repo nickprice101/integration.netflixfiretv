@@ -1,4 +1,4 @@
-f{
+{
     "$schema": "http://json-schema.org",
     "$id": "http://yio-remote.com/netflixfiretv.json",
     "type": "object",

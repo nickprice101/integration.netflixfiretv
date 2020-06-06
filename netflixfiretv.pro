@@ -78,3 +78,6 @@ DISTFILES += \
 
 # Add setup schema to metadata
 CFG_SCHEMA = "$$cat($$PWD/setup_schema.json)"
+
+RESOURCES += \
+    images.qrc
